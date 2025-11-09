@@ -6,72 +6,48 @@
     <title>Админ-панель Пеликан Алаколь</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f5f5f5;
         }
         .header {
             background: linear-gradient(135deg, #3b82f6, #10b981);
-            color: white;
-            padding: 2rem;
+            color: white; padding: 2rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 1rem;
         }
         .header-left h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+            font-size: 2rem; margin-bottom: 0.5rem;
         }
-        .header-left p {
-            opacity: 0.9;
-        }
+        .header-left p { opacity: 0.9; }
         .btn-token {
-            padding: 12px 24px;
-            background: white;
-            color: #3b82f6;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
+            padding: 12px 24px; background: white; color: #3b82f6;
+            border: none; border-radius: 8px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s; font-size: 1rem;
         }
         .btn-token:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
+            max-width: 1400px; margin: 0 auto; padding: 2rem;
         }
         .token-setup {
-            background: #fef3c7;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            border-left: 4px solid #f59e0b;
+            background: #fef3c7; padding: 1.5rem; border-radius: 12px;
+            margin-bottom: 2rem; border-left: 4px solid #f59e0b;
         }
         .tabs {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
         .tab {
-            padding: 1.5rem;
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding: 1.5rem; background: white; border: 2px solid #e5e7eb;
+            border-radius: 12px; cursor: pointer; transition: all 0.3s;
         }
         .tab:hover {
             border-color: #3b82f6;
@@ -79,76 +55,47 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
         }
         .tab.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
+            background: #3b82f6; color: white; border-color: #3b82f6;
         }
         .tab-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+            font-size: 1.2rem; font-weight: 600; margin-bottom: 0.25rem;
         }
         .tab-desc {
-            font-size: 0.9rem;
-            opacity: 0.8;
+            font-size: 0.9rem; opacity: 0.8;
         }
         .editor-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .editor {
-            width: 100%;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
-            min-height: 500px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            resize: vertical;
-            line-height: 1.6;
+            width: 100%; border: 2px solid #e5e7eb; border-radius: 8px;
+            padding: 1rem; min-height: 500px; font-family: 'Courier New', monospace;
+            font-size: 14px; resize: vertical; line-height: 1.6;
         }
         .actions {
-            margin-top: 1.5rem;
-            display: flex;
-            gap: 1rem;
+            margin-top: 1.5rem; display: flex; gap: 1rem;
         }
         .btn {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
+            padding: 12px 28px; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
             transition: all 0.3s;
         }
         .btn-primary {
-            background: #3b82f6;
-            color: white;
+            background: #3b82f6; color: white;
         }
         .btn-primary:hover {
             background: #2563eb;
         }
         .btn-secondary {
-            background: #6b7280;
-            color: white;
+            background: #6b7280; color: white;
         }
         .status {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            display: none;
+            padding: 1rem; border-radius: 8px; margin-top: 1rem; display: none;
         }
         .status.success {
-            background: #d1fae5;
-            color: #065f46;
-            display: block;
+            background: #d1fae5; color: #065f46; display: block;
         }
         .status.error {
-            background: #fee2e2;
-            color: #991b1b;
-            display: block;
+            background: #fee2e2; color: #991b1b; display: block;
         }
     </style>
 </head>
@@ -160,34 +107,34 @@
         </div>
         <button class="btn-token" onclick="setupToken()">🔑 Токен</button>
     </div>
-    
+
     <div class="container">
         <div class="token-setup" id="tokenSetup" style="display:none;">
             <strong>⚠️ Настройте GitHub токен</strong>
         </div>
-        
+
         <div class="tabs" id="tabs"></div>
-        
+
         <div class="editor-section">
             <h2 id="sectionTitle">Выберите раздел</h2>
             <textarea id="editor" class="editor"></textarea>
-            
+
             <div class="actions">
                 <button class="btn btn-primary" onclick="saveChanges()">💾 Сохранить</button>
                 <button class="btn btn-secondary" onclick="reload()">🔄 Обновить</button>
             </div>
-            
+
             <div class="status" id="status"></div>
         </div>
     </div>
-    
+
     <script src="config.js"></script>
     <script>
         const API = 'https://api.github.com';
         let token = localStorage.getItem('github_token') || '';
         let section = null;
         let sha = '';
-        
+
         function setupToken() {
             const t = prompt('GitHub Token:');
             if (t) {
@@ -197,7 +144,7 @@
                 document.getElementById('tokenSetup').style.display = 'none';
             }
         }
-        
+
         function generateTabs() {
             const html = CONFIG.sections.map(s => \`
                 <div class="tab" onclick="loadSection('\${s.id}')">
@@ -207,50 +154,53 @@
             \`).join('');
             document.getElementById('tabs').innerHTML = html;
         }
-        
+
         async function loadSection(id) {
             if (!token) {
                 alert('Настройте токен!');
                 return;
             }
-            
+
             section = id;
             const cfg = CONFIG.sections.find(s => s.id === id);
             const repo = CONFIG.repos[cfg.repo];
-            const path = \`\${CONFIG.contentPath}/\${cfg.file}\`;
-            
+            const path = \`\${cfg.file}\`;
+
             document.getElementById('sectionTitle').textContent = cfg.name;
             document.getElementById('editor').value = 'Загрузка...';
-            
+
             try {
                 const r = await fetch(\`\${API}/repos/\${repo}/contents/\${path}\`, {
                     headers: { 'Authorization': \`token \${token}\` }
                 });
                 const data = await r.json();
+
                 const content = decodeURIComponent(escape(atob(data.content)));
-                document.getElementById('editor').value = JSON.stringify(JSON.parse(content), null, 2);
+
+                document.getElementById('editor').value = content;
                 sha = data.sha;
+
+                setActiveTab(id);
+
                 showStatus('✅ Загружено', 'success');
             } catch (e) {
                 alert('Ошибка: ' + e.message);
                 showStatus('❌ ' + e.message, 'error');
             }
         }
-        
+
         async function saveChanges() {
             if (!token || !section) {
                 alert('Выберите раздел!');
                 return;
             }
-            
+
             const editor = document.getElementById('editor');
             const cfg = CONFIG.sections.find(s => s.id === section);
             const repo = CONFIG.repos[cfg.repo];
-            const path = \`\${CONFIG.contentPath}/\${cfg.file}\`;
-            
+            const path = \`\${cfg.file}\`;
+
             try {
-                JSON.parse(editor.value);
-                
                 const r = await fetch(\`\${API}/repos/\${repo}/contents/\${path}\`, {
                     method: 'PUT',
                     headers: {
@@ -263,7 +213,7 @@
                         sha: sha
                     })
                 });
-                
+
                 const data = await r.json();
                 sha = data.content.sha;
                 alert('✅ Сохранено!');
@@ -273,18 +223,26 @@
                 showStatus('❌ ' + e.message, 'error');
             }
         }
-        
+
         function reload() {
             if (section) loadSection(section);
         }
-        
+
         function showStatus(msg, type) {
             const s = document.getElementById('status');
             s.textContent = msg;
             s.className = \`status \${type}\`;
+            s.style.display = 'block';
             setTimeout(() => s.style.display = 'none', 3000);
         }
-        
+
+        function setActiveTab(id) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            const activeTab = Array.from(tabs).find(t => t.textContent.includes(CONFIG.sections.find(s => s.id === id).name));
+            if (activeTab) activeTab.classList.add('active');
+        }
+
         window.onload = () => {
             generateTabs();
             if (!token) document.getElementById('tokenSetup').style.display = 'block';
