@@ -26,7 +26,7 @@ jobs:
       run: docker push your-dockerhub-username/pelikan-admin:latest
 
     - name: Deploy on VPS with SSH
-      uses: appleboy/ssh-action@v0.1.11
+      uses: uses: appleboy/ssh-action@v0.1.9
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USER }}
