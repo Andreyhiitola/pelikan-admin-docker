@@ -413,3 +413,71 @@ HTTPS с SSL
 ## Контакты﻿
 VPS_SSH_KEY — приватный SSH ключ для доступа к VPS/ я так понимаю надо вз
 По всем вопросам и предложениям обращайтесь к разработчику.VPS_SSH_KEY — приватный SSH ключ для доступа к VPS/ я так понимаю надо вз
+
+08.11.2025_21:00  # PROJECT.md для pelikan-admin-docker﻿
+
+## О проекте﻿
+Проект pelikan-admin-docker — это админ-панель с backend на Node.js, упакованная в Docker для управления меню и расписанием, с поддержкой HTTPS через SSL.
+pelikan-admin-docker/
+├── data/                   # Данные (БД, текст меню и расписания)
+├── docker-compose.yml      # Для оркестрации Docker-контейнеров
+├── privkey.pem             # SSL приватный ключ
+├── fullchain.pem           # SSL сертификат
+└── (опционально) скрипты для деплоя и обновления сертификатов
+## Использование﻿
+
+Админ-панель доступна через браузер по HTTPS, работает с backend API на VPS.
+
+Backend API обеспечивает синхронизацию данных с сайтом и Android-приложением.
+
+Docker-образы собираются из Dockerfile в репозитории GitHub.
+
+На VPS разворачивается docker-compose для запуска контейнеров.
+
+SSL сертификаты генерируются через Certbot, можно использовать Duck DNS для динамического IP.
+
+## Настройка SSL и Duck DNS﻿
+
+Используйте Certbot с поддержкой Duck DNS для бесплатного получения и автоматического обновления сертификатов.
+
+Путь к SSL файлам указывается в docker-compose и монтируется в контейнеры.
+
+## CI/CD и автоматизация﻿
+
+GitHub Actions собирает образ из Dockerfile и деплоит на VPS по SSH.
+
+Используйте секреты для Docker Hub и SSH-доступа.
+
+Автоматический скрипт обновляет сертификаты и перезагружает контейнеры.
+
+## Важное﻿
+
+Dockerfile хранится в GitHub, на VPS — только docker-compose, данные и SSL.
+
+Для работы с API сайт и мобильное приложение обращаются к backend на VPS.
+
+При отсутствии домена можно использовать Duck DNS для тестирования.
+
+## Контакты﻿
+Для помощи с настройкой обращайтесь к разработчику.
+
+Если хотите, могу помочь с примером скрипта и инструкциями по настройке Certbot на 
+sudo apt update
+sudo apt install -y certbot
+sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
+#!/bin/bash
+
+# Пути сертификатов
+CERT_PATH="/etc/letsencrypt/live/yourdomain.com"
+PROJECT_SSL_PATH="/path/to/pelikan-admin-docker"
+
+# Копируем сертификаты в проект
+cp "$CERT_PATH/privkey.pem" "$PROJECT_SSL_PATH/privkey.pem"
+cp "$CERT_PATH/fullchain.pem" "$PROJECT_SSL_PATH/fullchain.pem"
+
+# Перезапускаем docker-compose (замените на свой путь)
+cd "$PROJECT_SSL_PATH"
+docker-compose down
+docker-compose up -d
+0 0,12 * * * /usr/bin/certbot renew --quiet --post-hook "/path/to/restart-script.sh"
+Где /path/to/restart-script.sh — это путь к вашему скрипту из шага 3, который копирует сертификаты и перезапускает контейнеры.
