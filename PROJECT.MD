@@ -339,3 +339,77 @@ CI/CD
 Этот файл должен быть размещён в корне репозитория pelikan-admin-docker как основная документация проекта.
 
 Если нужно, могу помочь также составить README.md и другие вспомогательные файлы.
+
+
+
+09.11.2025__20:42 # PROJECT.md для pelikan-admin-docker﻿
+
+## О проекте﻿
+
+Проект pelikan-admin-docker — это админ-панель с backend на Node.js, предназначенная для управления меню и расписанием сайта или мобильного приложения. Проект упакован в Docker с использованием SQLite и HTTPS.
+
+## Структура проекта﻿
+
+text
+pelikan-admin-docker/
+├── data/                     # Хранилище файлов меню, расписания, база данных
+├── public/                   # Фронтенд админ-панели (HTML/JS/CSS)
+├── Dockerfile                # Инструкция сборки Docker-образа
+├── docker-compose.yml        # Конфигурация запуска контейнеров
+├── server.js                 # Сервер Node.js с API
+├── package.json              # Зависимости проекта
+├── README.md                 # Описание проекта
+├── privkey.pem               # SSL ключ (НЕ коммитить)
+├── fullchain.pem             # SSL сертификат (НЕ коммитить)
+└── .gitignore                # Исключённые файлы
+## Установка и запуск﻿
+
+Клонируйте репозиторий и перейдите в папку проекта:
+
+text
+git clone https://github.com/Andreyhiitola/pelikan-admin-docker.git
+cd pelikan-admin-docker
+Создайте папку data/ и добавьте туда файлы menu.txt, schedule.txt (шаблоны есть в репо).
+
+Скопируйте свои SSL сертификаты privkey.pem, fullchain.pem в корень проекта (без коммита).
+
+Соберите и запустите Docker-контейнеры:
+
+text
+docker-compose build
+docker-compose up -d
+Откройте браузер по адресу https://localhost:8443 или https://<IP_сервера>:8443.
+
+## API﻿
+
+GET /api/getMenuText — получить исходный текст меню
+
+POST /api/saveMenuText — отправить текст меню, который будет сохранён и конвертирован в JSON
+
+## Технологии﻿
+
+Node.js с Express
+
+SQLite для хранения данных
+
+Docker и Docker Compose
+
+HTTPS с SSL
+
+## Безопасность﻿
+
+Используйте ваши SSL сертификаты для HTTPS
+
+Настройте firewall и ограничьте доступ к админ-панели
+
+Не храните ключи и сертификаты в публичных репозиториях
+
+## CI/CD﻿
+
+Используйте GitHub Actions для автоматической сборки образа и деплоя на VPS
+
+Держите секреты в GitHub Secrets (Docker Hub креды, SSH ключи и др.)
+
+## Контакты﻿
+VPS_SSH_KEY — приватный SSH ключ для доступа к VPS/ я так понимаю надо вз
+По всем вопросам и предложениям обращайтесь к разработчику.VPS_SSH_KEY — приватный SSH ключ для доступа к VPS/ я так понимаю надо вз
