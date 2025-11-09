@@ -1,15 +1,294 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<title>Админ-панель Pelikan</title>
-<link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Админ-панель Пеликан Алаколь</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .header-left h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .header-left p {
+            opacity: 0.9;
+        }
+        .btn-token {
+            padding: 12px 24px;
+            background: white;
+            color: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+        .btn-token:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .token-setup {
+            background: #fef3c7;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #f59e0b;
+        }
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .tab {
+            padding: 1.5rem;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        .tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .tab-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .tab-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .editor-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .editor {
+            width: 100%;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 500px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+        .actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-  <h1>Редактирование меню</h1>
-  <textarea id="menuText"></textarea><br />
-  <button id="saveBtn">Сохранить</button>
-
-  <script src="app.js"></script>
+    <div class="header">
+        <div class="header-left">
+            <h1>🐦 Админ-панель Пеликан</h1>
+            <p>Управление контентом</p>
+        </div>
+        <button class="btn-token" onclick="setupToken()">🔑 Токен</button>
+    </div>
+    
+    <div class="container">
+        <div class="token-setup" id="tokenSetup" style="display:none;">
+            <strong>⚠️ Настройте GitHub токен</strong>
+        </div>
+        
+        <div class="tabs" id="tabs"></div>
+        
+        <div class="editor-section">
+            <h2 id="sectionTitle">Выберите раздел</h2>
+            <textarea id="editor" class="editor"></textarea>
+            
+            <div class="actions">
+                <button class="btn btn-primary" onclick="saveChanges()">💾 Сохранить</button>
+                <button class="btn btn-secondary" onclick="reload()">🔄 Обновить</button>
+            </div>
+            
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script>
+        const API = 'https://api.github.com';
+        let token = localStorage.getItem('github_token') || '';
+        let section = null;
+        let sha = '';
+        
+        function setupToken() {
+            const t = prompt('GitHub Token:');
+            if (t) {
+                token = t.trim();
+                localStorage.setItem('github_token', token);
+                alert('✅ Токен сохранён');
+                document.getElementById('tokenSetup').style.display = 'none';
+            }
+        }
+        
+        function generateTabs() {
+            const html = CONFIG.sections.map(s => \`
+                <div class="tab" onclick="loadSection('\${s.id}')">
+                    <div class="tab-title">\${s.name}</div>
+                    <div class="tab-desc">\${s.description}</div>
+                </div>
+            \`).join('');
+            document.getElementById('tabs').innerHTML = html;
+        }
+        
+        async function loadSection(id) {
+            if (!token) {
+                alert('Настройте токен!');
+                return;
+            }
+            
+            section = id;
+            const cfg = CONFIG.sections.find(s => s.id === id);
+            const repo = CONFIG.repos[cfg.repo];
+            const path = \`\${CONFIG.contentPath}/\${cfg.file}\`;
+            
+            document.getElementById('sectionTitle').textContent = cfg.name;
+            document.getElementById('editor').value = 'Загрузка...';
+            
+            try {
+                const r = await fetch(\`\${API}/repos/\${repo}/contents/\${path}\`, {
+                    headers: { 'Authorization': \`token \${token}\` }
+                });
+                const data = await r.json();
+                const content = decodeURIComponent(escape(atob(data.content)));
+                document.getElementById('editor').value = JSON.stringify(JSON.parse(content), null, 2);
+                sha = data.sha;
+                showStatus('✅ Загружено', 'success');
+            } catch (e) {
+                alert('Ошибка: ' + e.message);
+                showStatus('❌ ' + e.message, 'error');
+            }
+        }
+        
+        async function saveChanges() {
+            if (!token || !section) {
+                alert('Выберите раздел!');
+                return;
+            }
+            
+            const editor = document.getElementById('editor');
+            const cfg = CONFIG.sections.find(s => s.id === section);
+            const repo = CONFIG.repos[cfg.repo];
+            const path = \`\${CONFIG.contentPath}/\${cfg.file}\`;
+            
+            try {
+                JSON.parse(editor.value);
+                
+                const r = await fetch(\`\${API}/repos/\${repo}/contents/\${path}\`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': \`token \${token}\`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: \`Update \${cfg.name}\`,
+                        content: btoa(unescape(encodeURIComponent(editor.value))),
+                        sha: sha
+                    })
+                });
+                
+                const data = await r.json();
+                sha = data.content.sha;
+                alert('✅ Сохранено!');
+                showStatus('✅ Сохранено', 'success');
+            } catch (e) {
+                alert('❌ Ошибка: ' + e.message);
+                showStatus('❌ ' + e.message, 'error');
+            }
+        }
+        
+        function reload() {
+            if (section) loadSection(section);
+        }
+        
+        function showStatus(msg, type) {
+            const s = document.getElementById('status');
+            s.textContent = msg;
+            s.className = \`status \${type}\`;
+            setTimeout(() => s.style.display = 'none', 3000);
+        }
+        
+        window.onload = () => {
+            generateTabs();
+            if (!token) document.getElementById('tokenSetup').style.display = 'block';
+        };
+    </script>
 </body>
 </html>
