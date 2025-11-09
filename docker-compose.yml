@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  pelikan-admin:
+    build: .
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./data:/app/data
+      - ./privkey.pem:/app/privkey.pem:ro
+      - ./fullchain.pem:/app/fullchain.pem:ro
+    environment:
+      - NODE_ENV=production
