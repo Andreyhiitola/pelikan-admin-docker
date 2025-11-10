@@ -1084,7 +1084,1109 @@ git push origin main
 Теперь у вас полная документация проекта! 📚✨
 
 
+Отлично! Создам обновленный **PROJECT.md** с полным описанием интеграции с GitHub API:
 
+```markdown
+# Pelikan Admin Docker - Полная техническая документация
+
+Система управления контентом с автоматической синхронизацией в GitHub для сайта и мобильного приложения.
+
+## 📋 Содержание
+
+- [О проекте](#о-проекте)
+- [Архитектура системы](#архитектура-системы)
+- [Технологический стек](#технологический-стек)
+- [Структура проекта](#структура-проекта)
+- [Установка](#установка)
+- [Конфигурация](#конфигурация)
+- [API Endpoints](#api-endpoints)
+- [GitHub интеграция](#github-интеграция)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Деплой](#деплой)
+- [Использование](#использование)
+- [Мониторинг](#мониторинг)
+- [Troubleshooting](#troubleshooting)
+- [Безопасность](#безопасность)
+
+---
+
+## 🎯 О проекте
+
+**Pelikan Admin Docker** — это полнофункциональная система управления контентом (CMS) для экосистемы "Пеликан Алаколь", включающей:
+
+- 🌐 **Сайт:** [pelikan-alakol-site](https://github.com/Andreyhiitola/pelikan-alakol-site)
+- 📱 **Android приложение:** [pelikan-android-app](https://github.com/Andreyhiitola/pelikan-android-app)
+
+### Основные возможности
+
+- ✏️ Редактирование контента через веб-интерфейс
+- 💾 Локальное хранение в SQLite
+- 🔄 Автоматическая синхронизация с GitHub
+- 🔐 HTTPS из коробки
+- 🐳 Полная контейнеризация
+- 🚀 CI/CD автоматический деплой
+- 📊 История изменений
+
+---
+
+## 🏗 Архитектура системы
+
+### Общая схема
+
+```
+┌─────────────────────────────────────────────┐
+│         Администратор                       │
+│         (Web Browser)                       │
+└────────────────┬────────────────────────────┘
+                 │ HTTPS :8443
+                 ▼
+┌─────────────────────────────────────────────┐
+│   pelikan-admin-docker (VPS)                │
+│   ┌───────────────────────────────────┐     │
+│   │  Node.js + Express                │     │
+│   │  - REST API                       │     │
+│   │  - Admin UI                       │     │
+│   │  - SQLite Database                │     │
+│   └───────────┬───────────────────────┘     │
+│               │                             │
+│               │ @octokit/rest               │
+└───────────────┼─────────────────────────────┘
+                │
+                │ GitHub API
+                │
+         ┌──────┴──────┐
+         │             │
+         ▼             ▼
+┌─────────────┐  ┌─────────────┐
+│  alakol-    │  │  android-   │
+│  site       │  │  app        │
+│  (GitHub)   │  │  (GitHub)   │
+│             │  │             │
+│ data/       │  │ shared-     │
+│  menu.json  │  │  content/   │
+│  schedule...│  │  data/      │
+└─────────────┘  └─────────────┘
+       │                │
+       ▼                ▼
+   Веб-сайт      Android APK
+```
+
+### Поток данных
+
+1. **Редактирование:** Администратор вносит изменения в админ-панели
+2. **Сохранение:** Данные сохраняются в SQLite БД на VPS
+3. **Синхронизация:** Нажатие кнопки "Sync to GitHub"
+4. **GitHub API:** Обновление JSON файлов в репозиториях
+5. **Публикация:** Сайт и приложение автоматически получают обновления
+
+---
+
+## 🛠 Технологический стек
+
+### Backend
+
+| Технология | Версия | Назначение |
+|------------|--------|------------|
+| Node.js | 18+ | Runtime environment |
+| Express.js | 4.18+ | Web framework |
+| SQLite3 | 5.1+ | База данных |
+| @octokit/rest | 20.0+ | GitHub API клиент |
+| https | built-in | SSL/TLS сервер |
+
+### Frontend
+
+| Технология | Назначение |
+|------------|------------|
+| HTML5 | Структура UI |
+| CSS3 | Стилизация |
+| Vanilla JavaScript | Логика клиента |
+| Fetch API | HTTP запросы |
+
+### DevOps
+
+| Технология | Назначение |
+|------------|------------|
+| Docker | Контейнеризация |
+| Docker Compose | Оркестрация |
+| GitHub Actions | CI/CD |
+| SSH | Удаленный деплой |
+| OpenSSL | SSL сертификаты |
+
+---
+
+## 📁 Структура проекта
+
+```
+pelikan-admin-docker/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml              # GitHub Actions workflow
+│
+├── public/                         # Frontend
+│   ├── index.html                 # Admin UI
+│   ├── app.js                     # Client logic
+│   └── styles.css                 # (опционально)
+│
+├── data/                           # Данные (не коммитится)
+│   ├── database.sqlite            # SQLite БД
+│   └── backups/                   # Резервные копии
+│
+├── server.js                       # Node.js сервер
+├── package.json                    # NPM зависимости
+├── package-lock.json               # Lockfile
+│
+├── Dockerfile                      # Docker образ
+├── docker-compose.yml              # Compose конфигурация
+│
+├── privkey.pem                     # SSL ключ (не коммитится)
+├── fullchain.pem                   # SSL сертификат (не коммитится)
+│
+├── .env                            # Переменные окружения (не коммитится)
+├── .env.example                    # Пример .env
+├── .gitignore                      # Игнорируемые файлы
+│
+├── README.md                       # Краткая документация
+├── PROJECT.md                      # Эта документация
+└── setup.sh                        # Скрипт установки
+```
+
+---
+
+## 🚀 Установка
+
+### Предварительные требования
+
+- **VPS/Server:** Ubuntu 20.04+ или Debian 11+
+- **Docker:** 20.10+
+- **Docker Compose:** 2.0+
+- **Git:** 2.0+
+- **GitHub Personal Access Token** с правами `repo`
+
+### Шаг 1: Подготовка VPS
+
+```
+# Обновить систему
+sudo apt update && sudo apt upgrade -y
+
+# Установить Docker
+curl -fsSL https://get.docker.com | sh
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Установить Docker Compose
+sudo apt install docker-compose -y
+
+# Добавить пользователя в группу docker
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Проверить установку
+docker --version
+docker-compose --version
+```
+
+### Шаг 2: Клонирование репозитория
+
+```
+# Создать директорию проекта
+sudo mkdir -p /opt/pelikan-admin-docker
+sudo chown $USER:$USER /opt/pelikan-admin-docker
+cd /opt/pelikan-admin-docker
+
+# Клонировать репозиторий
+git clone https://github.com/Andreyhiitola/pelikan-admin-docker.git .
+
+# Создать директорию для данных
+mkdir -p data
+```
+
+### Шаг 3: SSL сертификаты
+
+#### Вариант A: Self-signed (для тестирования)
+
+```
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout privkey.pem \
+  -out fullchain.pem \
+  -days 365 \
+  -subj "/CN=localhost"
+
+chmod 600 privkey.pem
+chmod 644 fullchain.pem
+```
+
+#### Вариант B: Let's Encrypt (для production)
+
+```
+# Установить Certbot
+sudo apt install certbot -y
+
+# Получить сертификат
+sudo certbot certonly --standalone -d yourdomain.com
+
+# Скопировать сертификаты
+sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ./
+sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ./
+sudo chown $USER:$USER *.pem
+```
+
+### Шаг 4: Переменные окружения
+
+```
+# Создать .env файл
+cp .env.example .env
+nano .env
+```
+
+Заполните:
+
+```
+NODE_ENV=production
+PORT=8443
+
+# GitHub Integration
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_OWNER=Andreyhiitola
+REPO_SITE=pelikan-alakol-site
+REPO_APP=pelikan-android-app
+```
+
+### Шаг 5: Установка зависимостей
+
+```
+# Локально (для разработки)
+npm install
+
+# Или через Docker (для production)
+docker-compose build
+```
+
+### Шаг 6: Firewall
+
+```
+# Открыть порт 8443
+sudo ufw allow 8443/tcp
+sudo ufw reload
+
+# Проверить статус
+sudo ufw status
+```
+
+### Шаг 7: Запуск
+
+```
+# Запустить контейнеры
+docker-compose up -d
+
+# Проверить статус
+docker-compose ps
+
+# Посмотреть логи
+docker-compose logs -f
+```
+
+### Шаг 8: Проверка
+
+```
+# Проверить порт
+ss -tulpn | grep 8443
+
+# Тест подключения
+curl -k https://localhost:8443
+
+# Открыть в браузере
+https://YOUR_VPS_IP:8443
+```
+
+---
+
+## ⚙️ Конфигурация
+
+### package.json
+
+```
+{
+  "name": "pelikan-admin-docker",
+  "version": "1.0.0",
+  "description": "Admin panel with GitHub sync",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "@octokit/rest": "^20.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+```
+
+### docker-compose.yml
+
+```
+version: '3.8'
+
+services:
+  app:
+    image: andreysagurov/pelikan-admin:latest
+    container_name: pelikan-admin
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./data:/app/data
+      - ./privkey.pem:/app/privkey.pem:ro
+      - ./fullchain.pem:/app/fullchain.pem:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=8443
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_OWNER=${GITHUB_OWNER}
+      - REPO_SITE=${REPO_SITE}
+      - REPO_APP=${REPO_APP}
+    env_file:
+      - .env
+    networks:
+      - pelikan-network
+
+networks:
+  pelikan-network:
+    driver: bridge
+```
+
+### Dockerfile
+
+```
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копировать package files
+COPY package*.json ./
+
+# Установить зависимости
+RUN npm ci --only=production
+
+# Копировать код приложения
+COPY server.js ./
+COPY public ./public
+
+# Создать директорию для данных
+RUN mkdir -p /app/data
+
+EXPOSE 8443
+
+CMD ["node", "server.js"]
+```
+
+---
+
+## 🌐 API Endpoints
+
+### Базовый URL
+
+```
+https://YOUR_VPS_IP:8443/api
+```
+
+### Endpoints для данных
+
+#### GET /api/:section
+
+Получить данные раздела из БД
+
+**Пример:**
+```
+curl -k https://localhost:8443/api/menu
+```
+
+**Response:**
+```
+{
+  "items": [
+    {
+      "name": "Борщ",
+      "price": 350,
+      "description": "Украинский борщ"
+    }
+  ]
+}
+```
+
+#### POST /api/:section
+
+Сохранить данные раздела в БД
+
+**Пример:**
+```
+curl -k -X POST https://localhost:8443/api/menu \
+  -H "Content-Type: application/json" \
+  -d '{"items":[{"name":"Борщ","price":350}]}'
+```
+
+**Response:**
+```
+{
+  "success": true,
+  "message": "Data saved to database"
+}
+```
+
+### Endpoints для синхронизации
+
+#### POST /api/sync/:section
+
+Синхронизировать раздел с GitHub
+
+**Пример:**
+```
+curl -k -X POST https://localhost:8443/api/sync/menu
+```
+
+**Response:**
+```
+{
+  "success": true,
+  "message": "Synced to GitHub successfully",
+  "results": [
+    {
+      "repo": "pelikan-alakol-site",
+      "path": "data/menu.json",
+      "success": true,
+      "url": "https://github.com/..."
+    },
+    {
+      "repo": "pelikan-android-app",
+      "path": "shared-content/data/menu.json",
+      "success": true,
+      "url": "https://github.com/..."
+    }
+  ]
+}
+```
+
+#### POST /api/sync-all
+
+Синхронизировать все разделы с GitHub
+
+**Response:**
+```
+{
+  "success": true,
+  "results": [
+    {"section": "menu", "success": true},
+    {"section": "schedule", "success": true},
+    {"section": "accommodation", "success": true}
+  ]
+}
+```
+
+---
+
+## 🔗 GitHub интеграция
+
+### Создание GitHub Token
+
+1. Откройте: https://github.com/settings/tokens
+2. **Generate new token (classic)**
+3. **Note:** `Pelikan Admin Panel`
+4. **Expiration:** `No expiration` или `90 days`
+5. **Scopes:** Выберите `repo` (полный доступ)
+6. **Generate token**
+7. **Скопируйте токен:** `ghp_xxxx...`
+
+### Настройка токена
+
+```
+# На VPS
+cd /opt/pelikan-admin-docker
+nano .env
+```
+
+Добавьте:
+```
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+### Проверка токена
+
+```
+# Тест через curl
+curl -H "Authorization: token YOUR_TOKEN" \
+  https://api.github.com/user
+
+# Должно вернуть информацию о вашем аккаунте
+```
+
+### Структура синхронизации
+
+#### Для pelikan-alakol-site
+
+```
+pelikan-alakol-site/
+└── data/
+    ├── menu.json
+    ├── schedule.json
+    ├── accommodation.json
+    ├── infrastructure.json
+    ├── activities.json
+    └── contacts.json
+```
+
+#### Для pelikan-android-app
+
+```
+pelikan-android-app/
+└── shared-content/
+    └── data/
+        ├── menu.json
+        ├── schedule.json
+        └── ...
+```
+
+### Пример JSON структуры
+
+**menu.json:**
+```
+{
+  "categories": [
+    {
+      "name": "Горячие блюда",
+      "items": [
+        {
+          "name": "Борщ украинский",
+          "price": 350,
+          "description": "С пампушками",
+          "available": true
+        }
+      ]
+    }
+  ],
+  "updated_at": "2025-11-10T16:30:00Z"
+}
+```
+
+---
+
+## 🔄 CI/CD Pipeline
+
+### GitHub Actions Workflow
+
+Файл: `.github/workflows/ci-cd.yml`
+
+```
+name: Build and Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: pelikan-admin
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: andreysagurov/pelikan-admin:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: 300s
+          command_timeout: 120s
+          script: |
+            cd /opt/pelikan-admin-docker
+            git pull origin main
+            docker pull andreysagurov/pelikan-admin:latest
+            docker-compose down --remove-orphans
+            docker-compose up -d --remove-orphans
+            docker-compose ps
+```
+
+### GitHub Secrets
+
+Необходимо добавить в **Settings → Secrets → Actions**:
+
+```
+DOCKER_PASSWORD       # Docker Hub пароль
+VPS_HOST             # IP адрес VPS
+VPS_USER             # SSH пользователь (root)
+VPS_SSH_KEY          # Приватный SSH ключ (весь текст)
+```
+
+### GitHub Variables
+
+**Settings → Secrets → Actions → Variables**:
+
+```
+DOCKERHUB_USERNAME   # Логин Docker Hub
+```
+
+---
+
+## 🚢 Деплой
+
+### Автоматический деплой
+
+```
+# Внести изменения в код
+git add .
+git commit -m "Update feature"
+git push origin main
+
+# Workflow автоматически:
+# 1. Соберет Docker образ
+# 2. Загрузит в Docker Hub
+# 3. Задеплоит на VPS
+# 4. Перезапустит контейнеры
+```
+
+### Ручной деплой
+
+```
+# Подключиться к VPS
+ssh root@vps-ip
+
+cd /opt/pelikan-admin-docker
+
+# Обновить код
+git pull origin main
+
+# Скачать новый образ
+docker pull andreysagurov/pelikan-admin:latest
+
+# Перезапустить
+docker-compose down
+docker-compose up -d
+
+# Проверить
+docker-compose ps
+docker-compose logs --tail=50
+```
+
+### Откат к предыдущей версии
+
+```
+# На VPS
+cd /opt/pelikan-admin-docker
+
+# Посмотреть историю
+git log --oneline
+
+# Откатиться к коммиту
+git reset --hard <commit-hash>
+
+# Перезапустить
+docker-compose up -d --force-recreate
+```
+
+---
+
+## 📖 Использование
+
+### Workflow администратора
+
+1. **Открыть админ-панель:**
+   ```
+   https://YOUR_VPS_IP:8443
+   ```
+
+2. **Редактировать раздел:**
+   - Выбрать раздел (меню, расписание, и т.д.)
+   - Внести изменения в textarea
+   - Нажать **"Сохранить"**
+
+3. **Синхронизировать с GitHub:**
+   - Нажать **"Sync to GitHub"** на конкретном разделе
+   - ИЛИ **"Синхронизировать все"** внизу страницы
+
+4. **Проверить результат:**
+   - Открыть GitHub репозиторий
+   - Убедиться, что файлы обновились
+   - Проверить сайт/приложение
+
+### Примеры редактирования
+
+#### Меню ресторана
+
+```
+{
+  "categories": [
+    {
+      "name": "Завтраки",
+      "items": [
+        {
+          "name": "Омлет с грибами",
+          "price": 250,
+          "description": "3 яйца, шампиньоны, зелень"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Расписание мероприятий
+
+```
+{
+  "activities": [
+    {
+      "time": "10:00",
+      "title": "Аквааэробика",
+      "location": "Бассейн",
+      "duration": "60 минут"
+    }
+  ]
+}
+```
+
+---
+
+## 📊 Мониторинг
+
+### Проверка статуса
+
+```
+# Статус контейнеров
+docker-compose ps
+
+# Логи в реальном времени
+docker-compose logs -f
+
+# Последние 100 строк
+docker-compose logs --tail=100
+
+# Использование ресурсов
+docker stats pelikan-admin
+```
+
+### Проверка работоспособности
+
+```
+# Тест API
+curl -k https://localhost:8443/api/menu
+
+# Проверка порта
+ss -tulpn | grep 8443
+
+# Проверка SSL
+openssl s_client -connect localhost:8443
+```
+
+### Мониторинг синхронизации
+
+```
+# Просмотр логов синхронизации
+docker-compose logs | grep "Sync"
+
+# Проверка последних коммитов в GitHub
+curl -H "Authorization: token YOUR_TOKEN" \
+  https://api.github.com/repos/Andreyhiitola/pelikan-alakol-site/commits
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Контейнер не запускается
+
+```
+# Проверить логи
+docker-compose logs
+
+# Проверить образ
+docker images | grep pelikan-admin
+
+# Пересоздать контейнер
+docker-compose down
+docker-compose up -d --force-recreate
+```
+
+### Порт не отвечает
+
+```
+# Проверить, что контейнер работает
+docker-compose ps  # STATUS = Up
+
+# Проверить firewall
+sudo ufw status
+sudo ufw allow 8443/tcp
+
+# Проверить, не занят ли порт
+sudo lsof -i :8443
+```
+
+### Ошибка синхронизации с GitHub
+
+```
+# Проверить токен
+docker-compose exec app printenv GITHUB_TOKEN
+
+# Проверить права токена
+curl -H "Authorization: token YOUR_TOKEN" \
+  https://api.github.com/user
+
+# Проверить логи
+docker-compose logs | grep "GitHub"
+```
+
+### База данных повреждена
+
+```
+# Остановить контейнер
+docker-compose down
+
+# Восстановить из бэкапа
+cp data/backups/database.sqlite.backup data/database.sqlite
+
+# Запустить
+docker-compose up -d
+```
+
+### SSL сертификат истек
+
+```
+# Обновить Let's Encrypt
+sudo certbot renew
+
+# Скопировать новые сертификаты
+sudo cp /etc/letsencrypt/live/yourdomain.com/*.pem ./
+
+# Перезапустить
+docker-compose restart
+```
+
+---
+
+## 🔐 Безопасность
+
+### Рекомендации
+
+- ✅ **Используйте Let's Encrypt** для production
+- ✅ **Ограничьте доступ** по IP через firewall
+- ✅ **Регулярно обновляйте** Docker и зависимости
+- ✅ **Ротируйте GitHub Token** каждые 90 дней
+- ✅ **Создавайте бэкапы** ежедневно
+- ✅ **Мониторьте логи** на подозрительную активность
+- ✅ **Используйте сильные пароли** для VPS
+
+### Защита .env файла
+
+```
+# Ограничить доступ
+chmod 600 .env
+
+# Проверить, что не закоммичен
+cat .gitignore | grep .env
+
+# Удалить из истории Git (если случайно закоммитили)
+git filter-branch --force --index-filter \
+  'git rm --cached --ignore-unmatch .env' \
+  --prune-empty --tag-name-filter cat -- --all
+```
+
+### Firewall настройка
+
+```
+# Разрешить только необходимые порты
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 8443/tcp
+sudo ufw enable
+
+# Ограничить доступ по IP (опционально)
+sudo ufw allow from YOUR_IP to any port 8443
+```
+
+### Fail2Ban (защита от брутфорса)
+
+```
+# Установить Fail2Ban
+sudo apt install fail2ban -y
+
+# Настроить для SSH
+sudo nano /etc/fail2ban/jail.local
+```
+
+Добавить:
+```
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 3600
+```
+
+---
+
+## 📦 Бэкапы
+
+### Ручной бэкап
+
+```
+# Бэкап базы данных
+cd /opt/pelikan-admin-docker
+cp data/database.sqlite data/backups/database-$(date +%Y%m%d-%H%M).sqlite
+
+# Бэкап всего проекта
+tar -czf /backup/pelikan-$(date +%Y%m%d).tar.gz \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  /opt/pelikan-admin-docker/
+```
+
+### Автоматический бэкап (cron)
+
+```
+# Создать скрипт бэкапа
+nano /opt/backup-pelikan.sh
+```
+
+Содержимое:
+```
+#!/bin/bash
+DATE=$(date +%Y%m%d-%H%M)
+cd /opt/pelikan-admin-docker
+cp data/database.sqlite data/backups/database-$DATE.sqlite
+find data/backups/ -name "database-*.sqlite" -mtime +7 -delete
+```
+
+Добавить в crontab:
+```
+chmod +x /opt/backup-pelikan.sh
+crontab -e
+
+# Добавить строку (бэкап каждый день в 2:00)
+0 2 * * * /opt/backup-pelikan.sh
+```
+
+### Восстановление
+
+```
+# Остановить приложение
+docker-compose down
+
+# Восстановить БД
+cp data/backups/database-20251110-1400.sqlite data/database.sqlite
+
+# Запустить
+docker-compose up -d
+```
+
+---
+
+## 🎓 Дополнительные материалы
+
+### Связанные репозитории
+
+- **Сайт:** https://github.com/Andreyhiitola/pelikan-alakol-site
+- **Android приложение:** https://github.com/Andreyhiitola/pelikan-android-app
+- **Первая админка (статическая):** https://github.com/Andreyhiitola/pelikan-admin
+
+### Документация технологий
+
+- [Node.js Documentation](https://nodejs.org/docs/)
+- [Express.js Guide](https://expressjs.com/)
+- [Octokit GitHub API](https://octokit.github.io/rest.js/)
+- [Docker Documentation](https://docs.docker.com/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+
+### Полезные ссылки
+
+- [GitHub API Reference](https://docs.github.com/en/rest)
+- [SQLite Documentation](https://www.sqlite.org/docs.html)
+- [Let's Encrypt](https://letsencrypt.org/docs/)
+
+---
+
+## 📝 Changelog
+
+### v1.0.0 (2025-11-10)
+
+- ✅ Первый релиз
+- ✅ CI/CD через GitHub Actions
+- ✅ Docker контейнеризация
+- ✅ GitHub API интеграция
+- ✅ SSL поддержка
+- ✅ Автоматическая синхронизация с репозиториями
+
+---
+
+## 👥 Участие в проекте
+
+Приветствуются pull requests и предложения по улучшению!
+
+### Roadmap
+
+- [ ] JWT аутентификация
+- [ ] Загрузка изображений
+- [ ] WYSIWYG редактор
+- [ ] История изменений с diff
+- [ ] Webhook для автоматического pull
+- [ ] Поддержка нескольких пользователей
+- [ ] Мультиязычность интерфейса
+
+---
+
+## 📄 Лицензия
+
+MIT License
+
+---
+
+## 📧 Контакты
+
+**Автор:** Andrey Hiitola  
+**GitHub:** [@Andreyhiitola](https://github.com/Andreyhiitola)  
+**Repository:** [pelikan-admin-docker](https://github.com/Andreyhiitola/pelikan-admin-docker)
+
+---
+
+**Дата последнего обновления:** 10 ноября 2025, 19:35 MSK
+```
+
+Сохраните этот PROJECT.md:
+
+```bash
+nano PROJECT.md
+# Вставьте содержимое
+
+git add PROJECT.md
+git commit -m "Add comprehensive PROJECT.md with GitHub integration"
+git push origin main
+```
+
+Теперь у вас полная документация с интеграцией GitHub API! 📚✨
 
 
 
