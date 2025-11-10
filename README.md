@@ -70,7 +70,25 @@ pelikan-admin-docker/
 ├── .gitignore # Исключенные файлы
 └── README.md # Эта документация
 
+🚀 Установка и запуск
+bash
+# 1. Обновите зависимости
+npm install @octokit/rest
 
+# 2. Создайте GitHub Personal Access Token
+# GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+# Права: repo (полный доступ)
+
+# 3. Добавьте в .env
+echo "GITHUB_TOKEN=your_token_here" >> .env
+
+# 4. Пересоберите образ
+docker-compose down
+docker-compose build
+docker-compose up -d
+
+# 5. Проверьте логи
+docker-compose logs -f
 
 ## 🔌 API
 
