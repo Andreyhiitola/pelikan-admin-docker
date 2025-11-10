@@ -1,42 +1,45 @@
-- name: Deploy on VPS with SSH
-  uses: appleboy/ssh-action@v0.1.9
-  with:
-    host: ${{ secrets.VPS_HOST }}
-    username: ${{ secrets.VPS_USER }}
-    key: ${{ secrets.VPS_SSH_KEY }}
-    script: |
-      echo "=== Starting deployment ==="
+name: Build and Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      # Проверка и создание директории
-      if [ ! -d "/opt/pelikan-admin-docker" ]; then
-        echo "Creating directory..."
-        sudo mkdir -p /opt/pelikan-admin-docker
-        sudo chown $USER:$USER /opt/pelikan-admin-docker
-      fi
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       
-      cd /opt/pelikan-admin-docker
+      - name: Build Docker image
+        run: docker build -t andreysagurov/pelikan-admin:latest .
       
-      # Инициализация Git если нужно
-      if [ ! -d ".git" ]; then
-        echo "Initializing Git repository..."
-        git init
-        git remote add origin https://github.com/Andreyhiitola/pelikan-admin-docker.git
-      fi
+      - name: Push Docker image to Docker Hub
+        run: docker push andreysagurov/pelikan-admin:latest
       
-      # Обновление кода
-      echo "Pulling latest changes..."
-      git fetch origin main
-      git reset --hard origin/main
-      
-      # Обновление образа
-      echo "Pulling Docker image..."
-      docker pull andreysagurov/pelikan-admin:latest
-      
-      # Перезапуск контейнеров
-      echo "Restarting containers..."
-      docker-compose down || true
-      docker-compose up -d
-      
-      # Проверка статуса
-      echo "=== Deployment complete ==="
-      docker-compose ps
+      - name: Deploy on VPS with SSH
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "=== Starting deployment ==="
+            cd /opt/pelikan-admin-docker || exit 1
+            echo "Pulling latest changes..."
+            git pull origin main
+            echo "Pulling Docker image..."
+            docker pull andreysagurov/pelikan-admin:latest
+            echo "Restarting containers..."
+            docker-compose down
+            docker-compose up -d
+            echo "=== Deployment complete ==="
+            docker-compose ps
