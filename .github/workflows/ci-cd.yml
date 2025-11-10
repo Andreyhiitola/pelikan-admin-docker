@@ -1,3 +1,4 @@
+
 name: Build and Deploy to VPS
 
 on:
@@ -50,74 +51,57 @@ jobs:
             set -ex
             echo "=== Deployment started at $(date) ==="
             
-            # Проверка директории
-            echo "Checking project directory..."
-            cd /opt/pelikan-admin-docker || {
-              echo "Creating directory..."
-              mkdir -p /opt/pelikan-admin-docker
-              cd /opt/pelikan-admin-docker
-            }
-            
+            cd /opt/pelikan-admin-docker
             echo "Current directory: $(pwd)"
-            ls -la
             
-            # Git операции
+            # Git обновление
             echo "Updating code from Git..."
-            if [ ! -d ".git" ]; then
-              echo "Initializing Git repository..."
-              git init
-              git remote add origin https://github.com/Andreyhiitola/pelikan-admin-docker.git
-            fi
-            
             git fetch origin main --depth=1
             git reset --hard origin/main
             echo "Code updated successfully"
             
-            # SSL сертификаты
+            # SSL сертификаты - исправленная версия
             echo "Checking SSL certificates..."
+            if [ -d privkey.pem ] || [ -d fullchain.pem ]; then
+              echo "Removing incorrect directories..."
+              rm -rf privkey.pem fullchain.pem
+            fi
+            
             if [ ! -f privkey.pem ] || [ ! -f fullchain.pem ]; then
               echo "Generating self-signed SSL certificate..."
               openssl req -x509 -newkey rsa:2048 -nodes \
                 -keyout privkey.pem \
                 -out fullchain.pem \
                 -days 365 \
-                -subj "/CN=localhost" 2>/dev/null
+                -subj "/CN=localhost"
               chmod 600 privkey.pem
               chmod 644 fullchain.pem
               echo "SSL certificate created"
             else
-              echo "SSL certificates already exist"
+              echo "SSL certificates OK"
             fi
             
-            # Создать директорию для данных
             mkdir -p data
-            echo "Data directory ready"
             
             # Docker операции
-            echo "Pulling latest Docker image..."
+            echo "Pulling Docker image..."
             docker pull andreysagurov/pelikan-admin:latest
             
-            echo "Stopping old containers..."
-            docker-compose down 2>/dev/null || echo "No containers to stop"
-            
-            echo "Starting new containers..."
+            echo "Restarting containers..."
+            docker-compose down || true
             docker-compose up -d
             
-            # Ждем запуска
             sleep 5
             
-            # Проверка статуса
             echo "=== Container Status ==="
             docker-compose ps
             
             echo "=== Recent Logs ==="
-            docker-compose logs --tail=30
+            docker-compose logs --tail=20
             
             echo "=== Port Check ==="
-            ss -tulpn | grep 8443 || echo "Warning: Port 8443 not listening yet"
+            ss -tulpn | grep 8443 || echo "Port not ready yet"
             
-            # Очистка
-            echo "Cleaning up old images..."
-            docker image prune -f 2>/dev/null || true
+            docker image prune -f || true
             
             echo "=== Deployment completed at $(date) ==="
