@@ -1,0 +1,6 @@
+# .gitignore
+.env
+.env.local
+*.pem
+data/database.sqlite
+node_modules/
