@@ -32,6 +32,10 @@
 git clone https://github.com/yourusername/pelikan-admin-docker.git
 cd pelikan-admin-docker
 
+# Настроить переменные окружения
+cp .env.example .env
+# Отредактируйте .env своими значениями
+
 Создать папку для данных
 mkdir -p data
 
@@ -73,13 +77,27 @@ pelikan-admin-docker/
 ## 🔌 API
 
 ### Получить текст меню
-curl -X POST https://localhost:8443/api/saveMenuText
--H "Content-Type: application/json"
--d '{"text": "Горячие блюда\n- Борщ 350₽\n- Солянка 400₽"}'
+curl -X GET https://localhost:8443/api/getMenuText
 
+### Сохранить текст меню
+curl -X POST https://localhost:8443/api/saveMenuText \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Горячие блюда\n- Борщ 350₽\n- Солянка 400₽"}'
+Текст автоматически конвертируется в JSON формат.
+
+## 🛠️ Разработка
+
+### Локальный запуск без Docker
+
+
+
+## 🛠️ Разработка
+
+### Локальный запуск без Docker
 npm install
 node server.js
-## Просмотр логов
+### Просмотр логов
+
 
 docker-compose logs -f
 docker-compose restart
