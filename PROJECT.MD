@@ -482,3 +482,614 @@ docker-compose down
 docker-compose up -d
 0 0,12 * * * /usr/bin/certbot renew --quiet --post-hook "/path/to/restart-script.sh"
 Где /path/to/restart-script.sh — это путь к вашему скрипту из шага 3, который копирует сертификаты и перезапускает контейнеры.
+
+PROJECT.MD jn 10/11/2025
+# Pelikan Admin Docker - Проект с автоматическим CI/CD
+
+Веб-приложение для управления данными с автоматическим деплоем на VPS через GitHub Actions.
+
+## 📋 Содержание
+
+- [Описание](#описание)
+- [Архитектура](#архитектура)
+- [Технологии](#технологии)
+- [Структура проекта](#структура-проекта)
+- [Установка и запуск](#установка-и-запуск)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Конфигурация](#конфигурация)
+- [API Endpoints](#api-endpoints)
+- [Deployment](#deployment)
+- [Мониторинг и логи](#мониторинг-и-логи)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## 🎯 Описание
+
+Pelikan Admin — это веб-приложение с админ-панелью для управления данными, развернутое в Docker контейнерах с автоматическим CI/CD через GitHub Actions.
+
+### Основные возможности
+
+- 📝 Управление данными через веб-интерфейс
+- 🔐 HTTPS подключение с SSL сертификатами
+- 🚀 Автоматический деплой при push в main
+- 🐳 Контейнеризация с Docker
+- 📊 Хранение данных в SQLite
+- 🔄 Автоматическое обновление при изменениях в коде
+
+---
+
+## 🏗 Архитектура
+┌─────────────────┐
+│ GitHub Repo │
+│ (main branch) │
+└────────┬────────┘
+│ push
+▼
+┌─────────────────┐
+│ GitHub Actions │
+│ - Build image │
+│ - Push to Hub │
+│ - Deploy │
+└────────┬────────┘
+│ SSH
+▼
+┌─────────────────┐
+│ VPS │
+│ ┌───────────┐ │
+│ │ Docker │ │
+│ │ Container │ │
+│ │ Node.js │ │
+│ │ :8443 │ │
+│ └───────────┘ │
+└─────────────────┘
+
+
+---
+
+## 🛠 Технологии
+
+### Backend
+- **Node.js** — серверная платформа
+- **Express.js** — веб-фреймворк
+- **SQLite** — база данных
+- **HTTPS** — безопасное соединение
+
+### DevOps
+- **Docker** — контейнеризация
+- **Docker Compose** — оркестрация
+- **GitHub Actions** — CI/CD
+- **SSH** — удаленный деплой
+
+### Инфраструктура
+- **VPS** — хостинг приложения
+- **Docker Hub** — реестр образов
+- **Self-signed SSL** — сертификаты для тестирования
+
+---
+
+## 📁 Структура проекта
+pelikan-admin-docker/
+├── .github/
+│ └── workflows/
+│ └── ci-cd.yml # GitHub Actions workflow
+├── public/ # Статические файлы
+│ ├── index.html # Админ-панель
+│ ├── app.js # Frontend логика
+│ └── styles.css # Стили
+├── data/ # База данных (создается автоматически)
+│ └── database.sqlite # SQLite БД
+├── server.js # Backend сервер
+├── package.json # Node.js зависимости
+├── Dockerfile # Docker образ
+├── docker-compose.yml # Docker Compose конфигурация
+├── .env.example # Пример переменных окружения
+├── privkey.pem # SSL приватный ключ (генерируется)
+├── fullchain.pem # SSL сертификат (генерируется)
+├── README.md # Основная документация
+└── PROJECT.md # Этот файл
+
+---
+
+## 🚀 Установка и запуск
+
+### Локальная разработка
+
+Клонировать репозиторий
+git clone https://github.com/Andreyhiitola/pelikan-admin-docker.git
+cd pelikan-admin-docker
+
+Установить зависимости
+npm install
+
+Создать SSL сертификаты для локального тестирования
+openssl req -x509 -newkey rsa:2048 -nodes
+-keyout privkey.pem
+-out fullchain.pem
+-days 365
+-subj "/CN=localhost"
+
+Запустить сервер
+node server.js
+
+Открыть в браузере
+https://localhost:8443
+
+### Запуск в Docker (локально)
+Собрать образ
+docker build -t pelikan-admin .
+
+Запустить контейнер
+docker run -d
+-p 8443:8443
+-v $(pwd)/data:/app/data
+-v $(pwd)/privkey.pem:/app/privkey.pem:ro
+-v $(pwd)/fullchain.pem:/app/fullchain.pem:ro
+--name pelikan-admin
+pelikan-admin
+
+Проверить логи
+docker logs -f pelikan-admin
+
+
+### Запуск с Docker Compose
+
+Запустить
+docker-compose up -d
+
+Проверить статус
+docker-compose ps
+
+Посмотреть логи
+docker-compose logs -f
+
+Остановить
+docker-compose down
+
+---
+
+## 🔄 CI/CD Pipeline
+
+### Workflow структура
+name: Build and Deploy to VPS
+
+on:
+push:
+branches: [main]
+
+jobs:
+build-and-push:
+# Сборка Docker образа и push в Docker Hub
+
+deploy:
+# SSH подключение к VPS и деплой
+
+### Этапы деплоя
+
+1. **Trigger:** Push в ветку `main`
+2. **Build:** Сборка Docker образа
+3. **Push:** Загрузка образа в Docker Hub
+4. **Deploy:** 
+   - SSH подключение к VPS
+   - Обновление кода из Git
+   - Генерация SSL (если нужно)
+   - Pull нового образа
+   - Перезапуск контейнеров
+   - Проверка статуса
+
+### GitHub Secrets
+
+Необходимые секреты в `Settings → Secrets and variables → Actions`:
+DOCKER_PASSWORD # Пароль Docker Hub
+VPS_HOST # IP адрес VPS
+VPS_USER # SSH пользователь (обычно root)
+VPS_SSH_KEY # Приватный SSH ключ
+DOCKERHUB_USERNAME # Логин Docker Hub
+
+---
+
+## ⚙️ Конфигурация
+
+### docker-compose.yml
+version: '3.8'
+
+services:
+app:
+image: andreysagurov/pelikan-admin:latest
+container_name: pelikan-admin
+restart: unless-stopped
+ports:
+- "8443:8443"
+volumes:
+- ./data:/app/data
+- ./privkey.pem:/app/privkey.pem:ro
+- ./fullchain.pem:/app/fullchain.pem:ro
+environment:
+- NODE_ENV=production
+- PORT=8443
+networks:
+- pelikan-network
+
+networks:
+pelikan-network:
+driver: bridge
+
+
+### Переменные окружения
+
+Создайте `.env` файл на основе `.env.example`:
+NODE_ENV=production
+PORT=8443
+SSL_KEY_PATH=/app/privkey.pem
+SSL_CERT_PATH=/app/fullchain.pem
+DATABASE_PATH=/app/data/database.sqlite
+
+
+---
+
+## 🌐 API Endpoints
+
+### GET /
+Возвращает админ-панель (index.html)
+
+### GET /api/data
+Получить все записи из базы данных
+
+**Response:**
+
+[
+{
+"id": 1,
+"name": "Example",
+"value": "Data",
+"created_at": "2025-11-10T12:00:00Z"
+}
+]
+
+
+### POST /api/data
+Добавить новую запись
+
+**Request:**
+{
+"name": "New Item",
+"value": "Some data"
+}
+
+### PUT /api/data/:id
+Обновить запись
+
+### DELETE /api/data/:id
+Удалить запись
+
+---
+
+## 🚢 Deployment
+
+### Первичная настройка VPS
+
+
+### PUT /api/data/:id
+Обновить запись
+
+### DELETE /api/data/:id
+Удалить запись
+
+---
+
+## 🚢 Deployment
+
+### Первичная настройка VPS
+1. Установить Docker
+curl -fsSL https://get.docker.com | sh
+systemctl start docker
+systemctl enable docker
+
+2. Установить Docker Compose
+apt install docker-compose -y
+
+3. Создать директорию проекта
+mkdir -p /opt/pelikan-admin-docker
+cd /opt/pelikan-admin-docker
+
+4. Клонировать репозиторий
+git clone https://github.com/Andreyhiitola/pelikan-admin-docker.git .
+
+5. Создать SSL сертификаты
+openssl req -x509 -newkey rsa:2048 -nodes
+-keyout privkey.pem
+-out fullchain.pem
+-days 365
+-subj "/CN=localhost"
+
+6. Открыть порт в firewall
+ufw allow 8443/tcp
+
+7. Запустить приложение
+docker-compose up -d
+
+text
+
+### Настройка SSH для GitHub Actions
+
+На локальной машине
+ssh-keygen -t ed25519 -f ~/.ssh/pelikan_deploy -N ""
+
+Скопировать публичный ключ на VPS
+ssh-copy-id -i ~/.ssh/pelikan_deploy.pub root@vps-ip
+
+Скопировать приватный ключ в GitHub Secret VPS_SSH_KEY
+cat ~/.ssh/pelikan_deploy
+
+text
+
+### Ручной деплой
+
+На VPS
+cd /opt/pelikan-admin-docker
+
+Обновить код
+git pull origin main
+
+Пересобрать и перезапустить
+docker-compose down
+docker-compose up -d --build
+
+Или просто pull нового образа
+docker pull andreysagurov/pelikan-admin:latest
+docker-compose up -d --force-recreate
+
+text
+
+---
+
+## 📊 Мониторинг и логи
+
+### Просмотр логов
+
+Логи контейнера
+docker-compose logs -f
+
+Последние 100 строк
+docker-compose logs --tail=100
+
+Логи конкретного сервиса
+docker-compose logs -f app
+
+Логи Docker
+journalctl -u docker -f
+
+text
+
+### Проверка статуса
+
+Статус контейнеров
+docker-compose ps
+
+Детальная информация
+docker inspect pelikan-admin
+
+Проверка порта
+ss -tulpn | grep 8443
+netstat -tulpn | grep 8443
+
+Использование ресурсов
+docker stats pelikan-admin
+
+text
+
+### Мониторинг деплоя
+
+Откройте GitHub Actions:
+https://github.com/Andreyhiitola/pelikan-admin-docker/actions
+
+text
+
+Каждый деплой создает workflow run с полными логами.
+
+---
+
+## 🔧 Troubleshooting
+
+### Проблема: Контейнер не запускается
+
+Проверить логи
+docker-compose logs
+
+Проверить, что образ существует
+docker images | grep pelikan-admin
+
+Пересоздать контейнер
+docker-compose down
+docker-compose up -d --force-recreate
+
+text
+
+### Проблема: Порт 8443 не отвечает
+
+Проверить, что контейнер работает
+docker-compose ps
+
+Проверить порт внутри контейнера
+docker exec pelikan-admin netstat -tulpn | grep 8443
+
+Проверить firewall
+ufw status
+ufw allow 8443/tcp
+
+Проверить, не занят ли порт
+lsof -i :8443
+
+text
+
+### Проблема: SSL сертификат
+
+Пересоздать сертификаты
+cd /opt/pelikan-admin-docker
+rm -f privkey.pem fullchain.pem
+
+openssl req -x509 -newkey rsa:2048 -nodes
+-keyout privkey.pem
+-out fullchain.pem
+-days 365
+-subj "/CN=localhost"
+
+chmod 600 privkey.pem
+chmod 644 fullchain.pem
+
+Перезапустить
+docker-compose restart
+
+text
+
+### Проблема: GitHub Actions деплой падает
+
+Проверить секреты
+Settings → Secrets → Actions
+Должны быть: VPS_HOST, VPS_USER, VPS_SSH_KEY, DOCKER_PASSWORD
+Проверить SSH подключение вручную
+ssh -i ~/.ssh/pelikan_deploy root@vps-ip
+
+Проверить Docker на VPS
+systemctl status docker
+docker ps
+
+text
+
+### Проблема: База данных пуста после перезапуска
+
+Проверить volume
+docker inspect pelikan-admin | grep -A 10 Mounts
+
+Данные должны быть в
+ls -la /opt/pelikan-admin-docker/data/
+
+Если данные потеряны, восстановить из бэкапа
+text
+
+---
+
+## 📦 Бэкапы
+
+### Ручной бэкап
+
+На VPS
+cd /opt/pelikan-admin-docker
+
+Создать бэкап базы данных
+cp data/database.sqlite data/database.sqlite.backup-$(date +%Y%m%d-%H%M%S)
+
+Создать полный бэкап проекта
+tar -czf /backup/pelikan-$(date +%Y%m%d).tar.gz
+--exclude='.git'
+--exclude='node_modules'
+/opt/pelikan-admin-docker/
+
+text
+
+### Автоматический бэкап (crontab)
+
+Добавить в crontab
+crontab -e
+
+Бэкап каждый день в 2:00 ночи
+0 2 * * * cd /opt/pelikan-admin-docker && cp data/database.sqlite data/backup-$(date +%Y%m%d).sqlite && find data/ -name "backup-*.sqlite" -mtime +7 -delete
+
+text
+
+### Восстановление из бэкапа
+
+Остановить приложение
+docker-compose down
+
+Восстановить базу данных
+cp data/database.sqlite.backup-20251110 data/database.sqlite
+
+Запустить приложение
+docker-compose up -d
+
+text
+
+---
+
+## 🔐 Безопасность
+
+### Рекомендации
+
+- ✅ Используйте Let's Encrypt для production
+- ✅ Регулярно обновляйте зависимости: `npm update`
+- ✅ Ротируйте SSH ключи каждые 90 дней
+- ✅ Используйте сильные пароли для Docker Hub
+- ✅ Ограничьте доступ к VPS с помощью firewall
+- ✅ Настройте регулярные бэкапы
+- ✅ Мониторьте логи на подозрительную активность
+
+### Обновление до Let's Encrypt
+
+На VPS
+apt install certbot
+
+Получить сертификат
+certbot certonly --standalone -d yourdomain.com
+
+Обновить docker-compose.yml
+volumes:
+- /etc/letsencrypt/live/yourdomain.com/privkey.pem:/app/privkey.pem:ro
+- /etc/letsencrypt/live/yourdomain.com/fullchain.pem:/app/fullchain.pem:ro
+Настроить автообновление
+echo "0 0 1 * * certbot renew --quiet" | crontab -
+
+text
+
+---
+
+## 📝 Лицензия
+
+MIT License
+
+---
+
+## 👤 Автор
+
+**Andrey Hiitola**
+- GitHub: [@Andreyhiitola](https://github.com/Andreyhiitola)
+- Repository: [pelikan-admin-docker](https://github.com/Andreyhiitola/pelikan-admin-docker)
+
+---
+
+## 🎓 Дополнительные ресурсы
+
+- [Docker Documentation](https://docs.docker.com/)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Node.js Documentation](https://nodejs.org/docs/)
+- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
+- [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
+
+---
+
+**Дата последнего обновления:** 10 ноября 2025
+Сохраните этот файл как PROJECT.md:
+
+bash
+# Создайте файл
+nano PROJECT.md
+
+# Вставьте содержимое выше
+# Сохраните: Ctrl+O, Enter, Ctrl+X
+
+# Закоммитьте
+git add PROJECT.md
+git commit -m "Add comprehensive PROJECT.md documentation"
+git push origin main
+Теперь у вас полная документация проекта! 📚✨
+
+
+
+
+
+
+
+
+
+
+
