@@ -32,6 +32,6 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd /path/to/project/on/vps
+          cd /opt/project_Pelikan Admin Docker/
           docker-compose pull
           docker-compose up -d
