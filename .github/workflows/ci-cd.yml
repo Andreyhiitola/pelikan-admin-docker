@@ -90,11 +90,11 @@ jobs:
             
             # Остановить старые контейнеры
             echo "Stopping old containers..."
-            docker-compose down || true
+            docker compose down || true
             
             # Запустить новые контейнеры
             echo "Starting new containers..."
-            docker-compose up -d
+            docker compose up -d
             
             # Почистить старые образы
             echo "Cleaning up..."
@@ -102,6 +102,6 @@ jobs:
             
             # Показать статус
             echo "=== Deployment complete ==="
-            docker-compose ps
+            docker compose ps
             echo "=== Recent logs ==="
-            docker-compose logs --tail=20
+            docker compose logs --tail=20
