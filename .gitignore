@@ -1,6 +1,29 @@
-# .gitignore
+# Environment variables
 .env
 .env.local
+.env.*.local
+
+# SSL certificates
 *.pem
+*.key
+*.crt
+
+# Database
 data/database.sqlite
+data/*.db
+
+# Node.js
 node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
