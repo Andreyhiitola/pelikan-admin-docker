@@ -15,6 +15,11 @@ services:
       - NODE_ENV=production
       - PORT=8443
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_OWNER=${GITHUB_OWNER:-Andreyhiitola}
+      - REPO_SITE=${REPO_SITE:-pelikan-alakol-site}
+      - REPO_APP=${REPO_APP:-pelikan-android-app}
+    env_file:
+      - .env
     networks:
       - pelikan-network
 
