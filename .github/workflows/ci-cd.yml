@@ -5,8 +5,11 @@ on:
     branches:
       - main
 
+env:
+  IMAGE_NAME: pelikan-admin
+
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     
     steps:
@@ -19,27 +22,86 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       
-      - name: Build Docker image
-        run: docker build -t andreysagurov/pelikan-admin:latest .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       
-      - name: Push Docker image to Docker Hub
-        run: docker push andreysagurov/pelikan-admin:latest
-      
-      - name: Deploy on VPS with SSH
-        uses: appleboy/ssh-action@v0.1.9
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: andreysagurov/pelikan-admin:latest
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             echo "=== Starting deployment ==="
-            cd /opt/pelikan-admin-docker || exit 1
+            
+            # Создать директорию если нет
+            if [ ! -d "/opt/pelikan-admin-docker" ]; then
+              echo "Creating project directory..."
+              sudo mkdir -p /opt/pelikan-admin-docker
+              sudo chown $USER:$USER /opt/pelikan-admin-docker
+            fi
+            
+            cd /opt/pelikan-admin-docker
+            
+            # Инициализировать Git если нужно
+            if [ ! -d ".git" ]; then
+              echo "Initializing Git repository..."
+              git init
+              git remote add origin https://github.com/Andreyhiitola/pelikan-admin-docker.git
+            fi
+            
+            # Создать self-signed сертификат если нет
+            if [ ! -f privkey.pem ]; then
+              echo "Generating self-signed certificate..."
+              openssl req -x509 -newkey rsa:4096 -nodes \
+                -keyout privkey.pem \
+                -out fullchain.pem \
+                -days 365 \
+                -subj "/CN=localhost"
+              chmod 600 privkey.pem
+              chmod 644 fullchain.pem
+              echo "Self-signed certificate created"
+            fi
+            
+            # Создать директорию для данных
+            mkdir -p data
+            
+            # Обновить код
             echo "Pulling latest changes..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # Скачать новый образ
             echo "Pulling Docker image..."
             docker pull andreysagurov/pelikan-admin:latest
-            echo "Restarting containers..."
-            docker-compose down
+            
+            # Остановить старые контейнеры
+            echo "Stopping old containers..."
+            docker-compose down || true
+            
+            # Запустить новые контейнеры
+            echo "Starting new containers..."
             docker-compose up -d
+            
+            # Почистить старые образы
+            echo "Cleaning up..."
+            docker image prune -f
+            
+            # Показать статус
             echo "=== Deployment complete ==="
             docker-compose ps
+            echo "=== Recent logs ==="
+            docker-compose logs --tail=20
