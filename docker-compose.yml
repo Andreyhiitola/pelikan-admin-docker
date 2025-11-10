@@ -1,7 +1,10 @@
 version: '3.8'
+
 services:
-  pelikan-admin:
-    build: .
+  app:
+    image: andreysagurov/pelikan-admin:latest
+    container_name: pelikan-admin
+    restart: unless-stopped
     ports:
       - "8443:8443"
     volumes:
@@ -10,3 +13,12 @@ services:
       - ./fullchain.pem:/app/fullchain.pem:ro
     environment:
       - NODE_ENV=production
+      - PORT=8443
+      - SSL_KEY_PATH=/app/privkey.pem
+      - SSL_CERT_PATH=/app/fullchain.pem
+    networks:
+      - pelikan-network
+
+networks:
+  pelikan-network:
+    driver: bridge
